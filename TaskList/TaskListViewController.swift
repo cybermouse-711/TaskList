@@ -8,13 +8,16 @@
 import UIKit
 import CoreData
 
+// MARK: - UITableViewController
 class TaskListViewController: UITableViewController {
     
+    // MARK: - Private Property
     private let cellID = "task"
     private var taskList: [Task] = []
     
     private let viewContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
+    // MARK: - Override Metods
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -23,8 +26,13 @@ class TaskListViewController: UITableViewController {
         fetchData()
     }
     
+    // MARK: - Private Metods
     private func addNewTask() {
-        showAlert(withTitle: "New Task", andMessage: "What do you want to do?")
+        showAlert(withTitle: "New Task", withMessage: "What do you want to do?", andTextField: "New Task")
+    }
+    
+    private func createNewTask() {
+        
     }
     
     private func fetchData() {
@@ -37,7 +45,7 @@ class TaskListViewController: UITableViewController {
         }
     }
     
-    private func showAlert(withTitle title: String, andMessage message: String) {
+    private func showAlert(withTitle title: String, withMessage message: String, andTextField textField: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
@@ -47,11 +55,11 @@ class TaskListViewController: UITableViewController {
         alert.addAction(saveAction)
         alert.addAction(cancelAction)
         alert.addTextField { textField in
-            textField.placeholder = "New Task"
+            textField.placeholder = textField.text
         }
         present(alert, animated: true)
     }
-    
+ 
     private func save(_ taskName: String) {
         let task = Task(context: viewContext)
         task.title = taskName
@@ -68,6 +76,19 @@ class TaskListViewController: UITableViewController {
             }
         }
     }
+    
+    private func change(_ taskName: String) {
+        
+        
+        if viewContext.hasChanges {
+            do {
+                try viewContext.save()
+            } catch {
+                print(error)
+            }
+        }
+    }
+    
 }
 
 // MARK: - Setup UI
@@ -108,5 +129,12 @@ extension TaskListViewController {
         content.text = task.title
         cell.contentConfiguration = content
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            taskList.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+        } else if editingStyle == .insert {}
     }
 }
