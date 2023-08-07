@@ -9,7 +9,7 @@ import UIKit
 import CoreData
 
 // MARK: - UITableViewController
-class TaskListViewController: UITableViewController {
+final class TaskListViewController: UITableViewController {
     
     // MARK: - Private Property
     private let cellID = "task"
@@ -101,8 +101,9 @@ class TaskListViewController: UITableViewController {
       
         let newTask = Task(context: viewContext)
         newTask.title = taskName
-        taskList.append(newTask)
+        taskList.remove(at: indexPath.row)
         tableView.insertRows(at: [indexPath], with: .automatic)
+        tableView.reloadData()
         
         if viewContext.hasChanges {
             do {
