@@ -28,11 +28,12 @@ class TaskListViewController: UITableViewController {
     
     // MARK: - Private Metods
     private func addNewTask() {
-        showAlert(withTitle: "New Task", withMessage: "What do you want to do?", andTextField: "Task")
+        showAlert(withTitle: "New Task", withMessage: "What do you want to do?")
     }
     
-    private func createNewTask() {
-        changeAlert(withTitle: "Change Task", withMessage: "What do you want to change?", andTextField: " ")
+    private func createTask(at indexPath: IndexPath) {
+        let text = taskList[indexPath.row].title ?? "Task"
+        changeAlert(withTitle: "Change Task", withMessage: "What do you want to change?", andTextField: text, andIndexPath: indexPath)
     }
     
     private func fetchData() {
@@ -45,7 +46,7 @@ class TaskListViewController: UITableViewController {
         }
     }
     
-    private func showAlert(withTitle title: String, withMessage message: String, andTextField textField: String) {
+    private func showAlert(withTitle title: String, withMessage message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
@@ -55,22 +56,22 @@ class TaskListViewController: UITableViewController {
         alert.addAction(saveAction)
         alert.addAction(cancelAction)
         alert.addTextField { textField in
-            textField.placeholder = textField.text
+            textField.placeholder = "Task"
         }
         present(alert, animated: true)
     }
     
-    private func changeAlert(withTitle title: String, withMessage message: String, andTextField textField: String) {
+    private func changeAlert(withTitle title: String, withMessage message: String, andTextField textField: String, andIndexPath indexPath: IndexPath) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            self?.change(task)
+            self?.change(task, indexPath)
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
         alert.addAction(cancelAction)
-        alert.addTextField { textField in
-            textField.placeholder = textField.text
+        alert.addTextField { oldTextField in
+            oldTextField.text = textField
         }
         present(alert, animated: true)
     }
@@ -92,12 +93,17 @@ class TaskListViewController: UITableViewController {
         }
     }
     
-    private func change(_ taskName: String) {
+    private func change(_ taskName: String, _ indexPath: IndexPath) {
+        
         let task = Task(context: viewContext)
-        task.title = taskName
-        taskList.append(task)
+        taskList.remove(at: indexPath.row)
+        viewContext.delete(task)
         
-        
+      
+        let newTask = Task(context: viewContext)
+        newTask.title = taskName
+        taskList.append(newTask)
+        taskList[indexPath.row] = newTask
         
         if viewContext.hasChanges {
             do {
@@ -153,11 +159,13 @@ extension TaskListViewController {
         if editingStyle == .delete {
             taskList.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .automatic)
+            fetchData()
         } else if editingStyle == .insert {}
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        createNewTask()
+        createTask(at: indexPath)
+        fetchData()
     }
 }
