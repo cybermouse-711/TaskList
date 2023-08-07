@@ -65,7 +65,7 @@ class TaskListViewController: UITableViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            self?.change(task)
+            self?.change(task, indexPath)
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
@@ -93,9 +93,8 @@ class TaskListViewController: UITableViewController {
         }
     }
     
-    private func change(_ taskName: String) {
+    private func change(_ taskName: String, _ indexPath: IndexPath) {
         let task = Task(context: viewContext)
-        let indexPath = IndexPath(index: task.hashValue)
         taskList.remove(at: indexPath.row)
         tableView.deleteRows(at: [indexPath], with: .automatic)
         viewContext.delete(task)
@@ -113,10 +112,9 @@ class TaskListViewController: UITableViewController {
             }
         }
     }
-    /*
-    private func delete(_ index: Int) {
+    
+    private func delete(_ indexPath: IndexPath) {
         let task = Task(context: viewContext)
-        let indexPath = IndexPath(index: task.hashValue)
         taskList.remove(at: indexPath.row)
         viewContext.delete(task)
         
@@ -127,7 +125,7 @@ class TaskListViewController: UITableViewController {
                 print(error.localizedDescription)
             }
         }
-    } */
+    }
 }
 
 // MARK: - Setup UI
@@ -172,10 +170,8 @@ extension TaskListViewController {
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            taskList.remove(at: indexPath.row)
-            //delete(indexPath.row)
+            delete(indexPath)
             tableView.deleteRows(at: [indexPath], with: .automatic)
-            
         } else if editingStyle == .insert {}
     }
     
