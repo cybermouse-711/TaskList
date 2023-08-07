@@ -65,7 +65,7 @@ class TaskListViewController: UITableViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            self?.change(task, indexPath)
+            self?.change(task)
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
@@ -93,17 +93,17 @@ class TaskListViewController: UITableViewController {
         }
     }
     
-    private func change(_ taskName: String, _ indexPath: IndexPath) {
-        
+    private func change(_ taskName: String) {
         let task = Task(context: viewContext)
+        let indexPath = IndexPath(index: task.hashValue)
         taskList.remove(at: indexPath.row)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
         viewContext.delete(task)
-        
       
         let newTask = Task(context: viewContext)
         newTask.title = taskName
         taskList.append(newTask)
-        taskList[indexPath.row] = newTask
+        tableView.insertRows(at: [indexPath], with: .automatic)
         
         if viewContext.hasChanges {
             do {
@@ -113,6 +113,21 @@ class TaskListViewController: UITableViewController {
             }
         }
     }
+    /*
+    private func delete(_ index: Int) {
+        let task = Task(context: viewContext)
+        let indexPath = IndexPath(index: task.hashValue)
+        taskList.remove(at: indexPath.row)
+        viewContext.delete(task)
+        
+        if viewContext.hasChanges {
+            do {
+                try viewContext.save()
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    } */
 }
 
 // MARK: - Setup UI
@@ -158,14 +173,14 @@ extension TaskListViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             taskList.remove(at: indexPath.row)
+            //delete(indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .automatic)
-            fetchData()
+            
         } else if editingStyle == .insert {}
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         createTask(at: indexPath)
-        fetchData()
     }
 }
