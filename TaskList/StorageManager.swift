@@ -6,14 +6,16 @@
 //
 
 import CoreData
+import UIKit
 
+// MARK: - StorageManager
 final class StorageManager {
     
+    // MARK: - Singlton
     static let shared = StorageManager()
     
     private init() {}
     
-    //var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     // MARK: - Core Data stack
    var persistentContainer: NSPersistentContainer = {
@@ -26,14 +28,8 @@ final class StorageManager {
         return container
     }()
     
-   func fetchData() {
-        let fetchRequest = Task.fetchRequest()
-        
-        do {
-            taskList = try viewContext.fetch(fetchRequest)
-        } catch {
-            print(error)
-        }
+    func applicationWillTerminate(_ application: UIApplication) {
+        saveContext()
     }
 
     // MARK: - Core Data Saving support
@@ -49,5 +45,26 @@ final class StorageManager {
         }
     }
     
+    // MARK: - Metods
+    func fetchData() -> [Task] {
+        let context = persistentContainer.viewContext
+        let fetchRequest = Task.fetchRequest()
+        
+        do {
+             return try context.fetch(fetchRequest)
+        } catch {
+            print(error.localizedDescription)
+        }
+        return []
+    }
     
+    func saveData(_ context: NSManagedObjectContext) {
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
 }

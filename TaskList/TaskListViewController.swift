@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import CoreData
 
 // MARK: - UITableViewController
 final class TaskListViewController: UITableViewController {
@@ -15,7 +14,9 @@ final class TaskListViewController: UITableViewController {
     private let cellID = "task"
     private var taskList: [Task] = []
     
-    private let viewContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    // MARK: - Singlton
+    private let context = StorageManager.shared
+    lazy var viewContex = context.persistentContainer.viewContext
 
     // MARK: - Override Metods
     override func viewDidLoad() {
@@ -23,7 +24,7 @@ final class TaskListViewController: UITableViewController {
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
-        fetchData()
+        taskList = context.fetchData()
     }
     
     // MARK: - Private Metods
@@ -35,17 +36,7 @@ final class TaskListViewController: UITableViewController {
         let text = taskList[indexPath.row].title ?? "Task"
         changeAlert(withTitle: "Change Task", withMessage: "What do you want to change?", andTextField: text, andIndexPath: indexPath)
     }
-    
-    private func fetchData() {
-        let fetchRequest = Task.fetchRequest()
-        
-        do {
-            taskList = try viewContext.fetch(fetchRequest)
-        } catch {
-            print(error)
-        }
-    }
-    
+
     private func showAlert(withTitle title: String, withMessage message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
@@ -77,55 +68,37 @@ final class TaskListViewController: UITableViewController {
     }
  
     private func save(_ taskName: String) {
-        let task = Task(context: viewContext)
+        let task = Task(context: viewContex)
         task.title = taskName
         taskList.append(task)
         
         let indexPath = IndexPath(row: taskList.count - 1, section: 0)
         tableView.insertRows(at: [indexPath], with: .automatic)
         
-        if viewContext.hasChanges {
-            do {
-                try viewContext.save()
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
+        context.saveData(viewContex)
     }
     
     private func change(_ taskName: String, _ indexPath: IndexPath) {
-        let task = Task(context: viewContext)
+        let task = Task(context: viewContex)
         taskList.remove(at: indexPath.row)
-        tableView.deleteRows(at: [indexPath], with: .automatic)
-        viewContext.delete(task)
+       // tableView.deleteRows(at: [indexPath], with: .automatic)
+        viewContex.delete(task)
       
-        let newTask = Task(context: viewContext)
+        let newTask = Task(context: viewContex)
         newTask.title = taskName
-        taskList.remove(at: indexPath.row)
-        tableView.insertRows(at: [indexPath], with: .automatic)
+        taskList.insert(newTask, at: indexPath.row)
+       // tableView.insertRows(at: [indexPath], with: .automatic)
         tableView.reloadData()
         
-        if viewContext.hasChanges {
-            do {
-                try viewContext.save()
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
+        context.saveData(viewContex)
     }
     
     private func delete(_ indexPath: IndexPath) {
-        let task = Task(context: viewContext)
+        let task = Task(context: viewContex)
         taskList.remove(at: indexPath.row)
-        viewContext.delete(task)
+        (viewContex).delete(task)
         
-        if viewContext.hasChanges {
-            do {
-                try viewContext.save()
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
+        context.saveData(viewContex)
     }
 }
 
