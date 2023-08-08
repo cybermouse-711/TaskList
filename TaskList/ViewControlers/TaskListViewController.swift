@@ -24,10 +24,20 @@ final class TaskListViewController: UITableViewController {
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
-        taskList = context.fetchData()
+        fetchData()
     }
     
     // MARK: - Private Metods
+    private func fetchData() {
+        let fetchRequest = Task.fetchRequest()
+        
+        do {
+            taskList = try viewContex.fetch(fetchRequest)
+        } catch {
+            print(error)
+        }
+    }
+    
     private func addNewTask() {
         showAlert(withTitle: "New Task", withMessage: "What do you want to do?")
     }
@@ -79,7 +89,7 @@ final class TaskListViewController: UITableViewController {
     }
     
     private func change(_ taskName: String, _ indexPath: IndexPath) {
-        let task = Task(context: viewContex)
+        let task = taskList[indexPath.row]
         taskList.remove(at: indexPath.row)
         viewContex.delete(task)
       
@@ -91,8 +101,7 @@ final class TaskListViewController: UITableViewController {
         context.saveData(viewContex)
     }
     
-    private func delete(_ indexPath: IndexPath) {
-        let task = Task(context: viewContex)
+    private func delete(_ task: Task, _ indexPath: IndexPath) {
         taskList.remove(at: indexPath.row)
         tableView.deleteRows(at: [indexPath], with: .automatic)
         viewContex.delete(task)
@@ -142,8 +151,9 @@ extension TaskListViewController {
     }
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        let task = taskList[indexPath.row]
         if editingStyle == .delete {
-            delete(indexPath)
+            delete(task, indexPath)
         } else if editingStyle == .insert {}
     }
     

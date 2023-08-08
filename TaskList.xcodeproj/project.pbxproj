@@ -60,11 +60,11 @@
 			children = (
 				C62C000B2A82C49800333B32 /* App */,
 				C62C000C2A82C4A700333B32 /* ViewControlers */,
+				C62C000F2A82DF8400333B32 /* Models */,
 				C62C000E2A82C4D100333B32 /* Services */,
 				A83A1D5E29D9ECCB000B0D27 /* Assets.xcassets */,
 				A83A1D6029D9ECCB000B0D27 /* LaunchScreen.storyboard */,
 				A83A1D6329D9ECCB000B0D27 /* Info.plist */,
-				A83A1D5B29D9ECCA000B0D27 /* TaskList.xcdatamodeld */,
 			);
 			path = TaskList;
 			sourceTree = "<group>";
@@ -92,6 +92,14 @@
 				C62C00092A81950600333B32 /* StorageManager.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		C62C000F2A82DF8400333B32 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A83A1D5B29D9ECCA000B0D27 /* TaskList.xcdatamodeld */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
