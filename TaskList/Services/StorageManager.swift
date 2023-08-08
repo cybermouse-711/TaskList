@@ -46,6 +46,17 @@ final class StorageManager {
     }
     
     // MARK: - Metods
+    func fetchData() -> [Task] {
+        let context = persistentContainer.viewContext
+        let fetchRequest = Task.fetchRequest()
+        
+        do {
+            return try context.fetch(fetchRequest)
+        } catch {
+            print(error.localizedDescription)
+        }
+        return []
+    }
     
     func saveData(_ context: NSManagedObjectContext) {
         if context.hasChanges {
