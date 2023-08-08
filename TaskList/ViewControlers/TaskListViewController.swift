@@ -81,13 +81,11 @@ final class TaskListViewController: UITableViewController {
     private func change(_ taskName: String, _ indexPath: IndexPath) {
         let task = Task(context: viewContex)
         taskList.remove(at: indexPath.row)
-       // tableView.deleteRows(at: [indexPath], with: .automatic)
         viewContex.delete(task)
       
         let newTask = Task(context: viewContex)
         newTask.title = taskName
         taskList.insert(newTask, at: indexPath.row)
-       // tableView.insertRows(at: [indexPath], with: .automatic)
         tableView.reloadData()
         
         context.saveData(viewContex)
@@ -96,7 +94,8 @@ final class TaskListViewController: UITableViewController {
     private func delete(_ indexPath: IndexPath) {
         let task = Task(context: viewContex)
         taskList.remove(at: indexPath.row)
-        (viewContex).delete(task)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+        viewContex.delete(task)
         
         context.saveData(viewContex)
     }
@@ -145,7 +144,6 @@ extension TaskListViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             delete(indexPath)
-            tableView.deleteRows(at: [indexPath], with: .automatic)
         } else if editingStyle == .insert {}
     }
     

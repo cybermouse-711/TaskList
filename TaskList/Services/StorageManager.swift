@@ -28,7 +28,7 @@ final class StorageManager {
         return container
     }()
     
-    func applicationWillTerminate(_ application: UIApplication) {
+    private func applicationWillTerminate(_ application: UIApplication) {
         saveContext()
     }
 
