@@ -14,11 +14,8 @@ final class StorageManager {
     // MARK: - Singlton
     static let shared = StorageManager()
     
-    private init() {}
-    
-    
     // MARK: - Core Data stack
-   var persistentContainer: NSPersistentContainer = {
+    private var persistentContainer: NSPersistentContainer = {
         let container = NSPersistentContainer(name: "TaskList")
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
@@ -28,12 +25,14 @@ final class StorageManager {
         return container
     }()
     
-    private func applicationWillTerminate(_ application: UIApplication) {
-        saveContext()
+    private let contex: NSManagedObjectContext
+    
+    private init() {
+        contex = persistentContainer.viewContext
     }
 
     // MARK: - Core Data Saving support
-    private func saveContext() {
+    func saveContext() {
         let context = persistentContainer.viewContext
         if context.hasChanges {
             do {
@@ -58,13 +57,22 @@ final class StorageManager {
         return []
     }
     
-    func saveData(_ context: NSManagedObjectContext) {
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
+    func save(_ taskName: String, comletion: (Task) -> Void) {
+        let task = Task(context: contex)
+        task.title = taskName
+        comletion(task)
+        saveContext()
+    }
+    
+    func change(_ taskName: String, comletion: (Task) -> Void) {
+        let task = Task(context: contex)
+        task.title = taskName
+        comletion(task)
+        saveContext()
+    }
+    
+    func delete(_ task: Task) {
+        contex.delete(task)
+        saveContext()
     }
 }

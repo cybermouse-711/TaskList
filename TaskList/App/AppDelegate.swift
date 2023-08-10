@@ -22,5 +22,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
 
     }
+    
+    internal func applicationWillTerminate(_ application: UIApplication) {
+        let context = StorageManager.shared
+        context.saveContext()
+    }
 }
 

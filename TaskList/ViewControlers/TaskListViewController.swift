@@ -15,8 +15,7 @@ final class TaskListViewController: UITableViewController {
     private var taskList: [Task] = []
     
     // MARK: - Singlton
-    private let context = StorageManager.shared
-    lazy var viewContex = context.persistentContainer.viewContext
+    private var viewContex = StorageManager.shared
 
     // MARK: - Override Metods
     override func viewDidLoad() {
@@ -24,7 +23,7 @@ final class TaskListViewController: UITableViewController {
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
-        taskList = context.fetchData()
+        taskList = viewContex.fetchData()
     }
     
     // MARK: - Private Metods
@@ -35,9 +34,9 @@ final class TaskListViewController: UITableViewController {
     
     private func createTask(at indexPath: IndexPath) {
         let text = taskList[indexPath.row].title ?? "Task"
-        changeAlert(withTitle: "Change Task", withMessage: "What do you want to change?", andTextField: text, andIndexPath: indexPath)
+        changeAlert(withTitle: "Change Task", withMessage: "What do you want to change?", andTextField: text, for: indexPath)
     }
- 
+ /*
     private func save(_ taskName: String) {
         let task = Task(context: viewContex)
         task.title = taskName
@@ -46,7 +45,7 @@ final class TaskListViewController: UITableViewController {
         let indexPath = IndexPath(row: taskList.count - 1, section: 0)
         tableView.insertRows(at: [indexPath], with: .automatic)
         
-        context.saveData(viewContex)
+        context.saveContext()
     }
     
     private func change(_ taskName: String, _ indexPath: IndexPath) {
@@ -61,7 +60,7 @@ final class TaskListViewController: UITableViewController {
         taskList.insert(newTask, at: indexPath.row)
         tableView.reloadData()
         
-        context.saveData(viewContex)
+        context.saveContext()
     }
     
     private func delete(_ task: Task, _ indexPath: IndexPath) {
@@ -69,8 +68,8 @@ final class TaskListViewController: UITableViewController {
         tableView.deleteRows(at: [indexPath], with: .automatic)
         viewContex.delete(task)
         
-        context.saveData(viewContex)
-    }
+        context.saveContext()
+    } */
 }
 
 // MARK: - Alerts
@@ -78,8 +77,13 @@ private extension TaskListViewController {
     func showAlert(withTitle title: String, withMessage message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
-            guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            self?.save(task)
+            guard let textTask = alert.textFields?.first?.text, !textTask.isEmpty else { return }
+            self?.viewContex.save(textTask, comletion: { [unowned self] task in
+                self?.taskList.append(task)
+                let indexPath = IndexPath(row: (self?.taskList.count ?? 0) - 1, section: 0)
+                self?.tableView.insertRows(at: [indexPath], with: .automatic)
+            }
+            )
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
@@ -90,11 +94,13 @@ private extension TaskListViewController {
         present(alert, animated: true)
     }
     
-    func changeAlert(withTitle title: String, withMessage message: String, andTextField textField: String, andIndexPath indexPath: IndexPath) {
+    func changeAlert(withTitle title: String, withMessage message: String, andTextField textField: String, for indexPath: IndexPath) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
-            guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            self?.change(task, indexPath)
+            guard let textTask = alert.textFields?.first?.text, !textTask.isEmpty else { return }
+            self?.viewContex.change(textTask, comletion: { [unowned self] _ in
+                self?.tableView.reloadRows(at: [indexPath], with: .automatic)
+            })
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
@@ -124,6 +130,7 @@ private extension TaskListViewController {
             systemItem: .add,
             primaryAction: UIAction { [unowned self] _ in
                 addNewTask()
+                tableView.reloadData()
             }
         )
         
@@ -147,13 +154,15 @@ extension TaskListViewController {
     }
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        let task = taskList[indexPath.row]
         if editingStyle == .delete {
-            delete(task, indexPath)
+            let task = taskList.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            viewContex.delete(task)
         } else if editingStyle == .insert {}
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         createTask(at: indexPath)
+        tableView.reloadRows(at: [indexPath], with: .automatic)
     }
 }
