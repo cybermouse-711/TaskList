@@ -45,18 +45,17 @@ final class StorageManager {
     }
     
     // MARK: - Metods
-    func fetchData() -> [Task] {
-        let context = persistentContainer.viewContext
+    func fetchData(completion: (Result<[Task], Error>) -> Void) {
         let fetchRequest = Task.fetchRequest()
         
         do {
-            return try context.fetch(fetchRequest)
-        } catch {
-            print(error.localizedDescription)
+            let task = try contex.fetch(fetchRequest)
+            completion(.success(task))
+        } catch let error {
+            completion(.failure(error))
         }
-        return []
     }
-    
+                       
     func save(_ taskName: String, comletion: (Task) -> Void) {
         let task = Task(context: contex)
         task.title = taskName
@@ -64,10 +63,8 @@ final class StorageManager {
         saveContext()
     }
     
-    func change(_ taskName: String, comletion: (Task) -> Void) {
-        let task = Task(context: contex)
+    func change(_ taskName: String, _ task: Task)  {
         task.title = taskName
-        comletion(task)
         saveContext()
     }
     

@@ -23,31 +23,46 @@ final class TaskListViewController: UITableViewController {
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
-        taskList = viewContex.fetchData()
+        fetchData()
     }
     
     // MARK: - Private Metods
- 
+
     private func addNewTask() {
         showAlert(withTitle: "New Task", withMessage: "What do you want to do?")
     }
-    
+
     private func createTask(at indexPath: IndexPath) {
         let text = taskList[indexPath.row].title ?? "Task"
         changeAlert(withTitle: "Change Task", withMessage: "What do you want to change?", andTextField: text, for: indexPath)
     }
- /*
-    private func save(_ taskName: String) {
-        let task = Task(context: viewContex)
-        task.title = taskName
-        taskList.append(task)
-        
-        let indexPath = IndexPath(row: taskList.count - 1, section: 0)
-        tableView.insertRows(at: [indexPath], with: .automatic)
-        
-        context.saveContext()
+
+    private func fetchData() {
+        viewContex.fetchData { [unowned self] result in
+            switch result {
+            case .success(let taskList):
+                self.taskList = taskList
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
     }
     
+    private func save(_ taskName: String) {
+        viewContex.save(taskName) { task in
+            taskList.append(task)
+            tableView.insertRows(at: [IndexPath(row: (self.taskList.count - 1), section: 0)],
+                                 with: .automatic)
+        }
+    }
+    
+    private func change(_ taskName: String, _ indexPath: IndexPath) {
+        let task = taskList[indexPath.row]
+        viewContex.change(taskName, task)
+        tableView.reloadRows(at: [indexPath], with: .automatic)
+    }
+    
+    /*
     private func change(_ taskName: String, _ indexPath: IndexPath) {
         let task = taskList[indexPath.row]
         print(indexPath)
@@ -61,14 +76,6 @@ final class TaskListViewController: UITableViewController {
         tableView.reloadData()
         
         context.saveContext()
-    }
-    
-    private func delete(_ task: Task, _ indexPath: IndexPath) {
-        taskList.remove(at: indexPath.row)
-        tableView.deleteRows(at: [indexPath], with: .automatic)
-        viewContex.delete(task)
-        
-        context.saveContext()
     } */
 }
 
@@ -78,12 +85,7 @@ private extension TaskListViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let textTask = alert.textFields?.first?.text, !textTask.isEmpty else { return }
-            self?.viewContex.save(textTask, comletion: { [unowned self] task in
-                self?.taskList.append(task)
-                let indexPath = IndexPath(row: (self?.taskList.count ?? 0) - 1, section: 0)
-                self?.tableView.insertRows(at: [indexPath], with: .automatic)
-            }
-            )
+            self?.save(textTask)
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
@@ -98,9 +100,7 @@ private extension TaskListViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let textTask = alert.textFields?.first?.text, !textTask.isEmpty else { return }
-            self?.viewContex.change(textTask, comletion: { [unowned self] _ in
-                self?.tableView.reloadRows(at: [indexPath], with: .automatic)
-            })
+            self?.change(textField, indexPath)
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
@@ -162,6 +162,7 @@ extension TaskListViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
         createTask(at: indexPath)
         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
